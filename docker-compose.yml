@@ -1,0 +1,17 @@
+version: '3'
+
+
+services:
+  chrome:
+    image: justinribeiro/chrome-headless
+    command:  --no-sandbox --remote-debugging-port=9222 --headless --disable-gpu --remote-debugging-address=0.0.0.0 http://google.com
+    ports:
+      - "9222"
+
+
+  render:
+    build: .
+    ports: 
+      - "8080:8080"
+    links:
+      - "chrome"
