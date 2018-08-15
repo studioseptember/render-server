@@ -1,6 +1,6 @@
 'use strict';
 
-const puppeteer = require('puppeteer-core');
+const puppeteer = require('puppeteer');
 const request = require('request-promise-native');
 const express = require('express');
 const dns = require('dns');
@@ -15,6 +15,55 @@ const HOST = '0.0.0.0';
 // App
 const app = express();
 
+let browser = null;
+
+
+
+(async () => {
+    browser = await puppeteer.launch({args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-gpu',
+    ]});
+
+    app.get('/render', (req, res) => {
+        (async () => {
+
+            if(!browser){
+                res.send("Browser not initialized");
+                return;
+            }
+
+
+
+            const url = req.query.url ? req.query.url : 'https://news.ycombinator.com';
+            const name = tmp.tmpNameSync();
+
+
+            const page = await browser.newPage();
+            await page.goto(url, {waitUntil: 'networkidle2'});
+            await page.pdf({
+                path: name,
+                printBackground: true,
+                width: '1374px',
+                height: '1081px',
+                pageRanges: '1',
+            });
+
+            res.download(name, 'result.pdf');
+        })();
+    });
+
+    app.listen(PORT, HOST);
+    console.log(`Running on http://${HOST}:${PORT}`);
+
+})();
+
+
+
+
+
+/*
 dns.resolve('chrome', function(err, records){
 
     console.log('ip', records);
@@ -30,28 +79,11 @@ dns.resolve('chrome', function(err, records){
             console.log(`WebsocketUrl: ${webSocket}`);
 
             puppeteer.connect({browserWSEndpoint: webSocket})
-                .then((browser) => {
-
-                    app.get('/render', (req, res) => {
-                        (async () => {
-                            const page = await browser.newPage();
-                            const url = req.query.url ? req.query.url : 'https://news.ycombinator.com';
-                            await page.goto(url, {waitUntil: 'networkidle2'});
-
-
-                            const name = tmp.tmpNameSync();
-                            await page.pdf({path: name, format: 'A4'});
-                            res.download(name, 'result.pdf');
-                        })();
-                    });
-
-                    app.listen(PORT, HOST);
-                    console.log(`Running on http://${HOST}:${PORT}`);
+                .then((_browser) => {
+                    browser = _browser;
                 });
-
-
 
         });
 
-
 });
+*/
