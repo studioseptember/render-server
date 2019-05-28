@@ -17,6 +17,9 @@ const app = express();
 
 let browser = null;
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 
 (async () => {
@@ -37,16 +40,24 @@ let browser = null;
 
 
             const url = req.query.url ? req.query.url : 'https://news.ycombinator.com';
+
+            const width = req.query.width ? req.query.width : '1374px';
+            const height = req.query.height ? req.query.height : '1081px';
+
             const name = tmp.tmpNameSync();
 
 
             const page = await browser.newPage();
             await page.goto(url, {waitUntil: 'networkidle2'});
+
+            if(req.query.sleep){
+                await sleep(1*req.query.sleep);
+            }
             await page.pdf({
                 path: name,
                 printBackground: true,
-                width: '1374px',
-                height: '1081px',
+                width: width,
+                height: height,
                 pageRanges: '1',
             });
 
